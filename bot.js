@@ -138,7 +138,7 @@ bot.command("last", async (ctx) => {
 
 // Messages
 
-bot.on("msg", async (ctx) => {
+bot.on("message", async (ctx) => {
   if (!ctx.config.isDeveloper) {
     await ctx.reply(
       "_This is a private utility bot for @anzubo.\nUnauthorized use is not allowed._",
