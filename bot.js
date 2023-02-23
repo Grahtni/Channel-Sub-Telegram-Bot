@@ -1,6 +1,5 @@
 require("dotenv").config();
-const { Bot } = require("grammy");
-let BOT_DEVELOPER = 0 | process.env.BOT_DEVELOPER;
+const { Bot, HttpError, GrammyError } = require("grammy");
 
 // Bot
 
@@ -13,6 +12,7 @@ const connection = mysql.createConnection(process.env.DATABASE_URL);
 
 // Admin
 
+let BOT_DEVELOPER = 0 | process.env.BOT_DEVELOPER;
 bot.use(async (ctx, next) => {
   ctx.config = {
     botDeveloper: BOT_DEVELOPER,
@@ -107,7 +107,7 @@ bot.command("list", async (ctx) => {
   } else {
     let members = await bot.api.getChatMemberCount(process.env.CHANNEL_ID);
     await ctx
-      .reply(`*List Users*\n_${members} users_`, {
+      .reply(`*List Users*\n_The channel has ${members} subscribers._`, {
         parse_mode: "Markdown",
       })
       .then(console.log("List command sent to", ctx.from.id))
@@ -153,6 +153,40 @@ bot.on("msg", async (ctx) => {
       }
     );
     return;
+  }
+});
+
+// Error
+
+bot.catch((err) => {
+  const ctx = err.ctx;
+  console.error(
+    "Error while handling update",
+    ctx.update.update_id,
+    "\nQuery:",
+    ctx.msg.text
+  );
+  if (ctx.config.isDeveloper) {
+    ctx.reply("An error occurred");
+  } else {
+    bot.api.sendMessage(
+      ctx.config.botDeveloper,
+      "Query: " +
+        ctx.msg.text +
+        " by @" +
+        ctx.from.username +
+        " ID: " +
+        ctx.from.id +
+        " errored!"
+    );
+  }
+  const e = err.error;
+  if (e instanceof GrammyError) {
+    console.error("Error in request:", e.description);
+  } else if (e instanceof HttpError) {
+    console.error("Could not contact Telegram:", e);
+  } else {
+    console.error("Unknown error:", e);
   }
 });
 
