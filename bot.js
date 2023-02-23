@@ -105,8 +105,9 @@ bot.command("list", async (ctx) => {
       .catch((e) => console.error(e));
     return;
   } else {
+    let members = await bot.api.getChatMemberCount(process.env.CHANNEL_ID);
     await ctx
-      .reply("*List Users*", {
+      .reply(`*List Users*\n_${members} users_`, {
         parse_mode: "Markdown",
       })
       .then(console.log("List command sent to", ctx.from.id))
