@@ -8,7 +8,7 @@ Use this to check whether users are subscribed to channel.
 
 1. Clone git repo.
 2. Run ```npm i``` in project folder. This will install the required dependencies.
-3. Populate .env file with bot token, bot dev ID and channel ID.
+3. Populate .env file with bot token, bot dev ID, channel ID & database URL.
 
 #### Bot token can be obtained from @BotFather.
 

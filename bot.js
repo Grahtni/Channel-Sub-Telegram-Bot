@@ -6,6 +6,11 @@ let BOT_DEVELOPER = 0 | process.env.BOT_DEVELOPER;
 
 const bot = new Bot(process.env.BOT_TOKEN);
 
+// DB
+
+const mysql = require("mysql2");
+const connection = mysql.createConnection(process.env.DATABASE_URL);
+
 // Admin
 
 bot.use(async (ctx, next) => {
@@ -26,8 +31,38 @@ bot.command("start", async (ctx) => {
         parse_mode: "Markdown",
       }
     )
-    .then(console.log("New user added:\n", ctx.from))
-    .catch((e) => console.error(e));
+    .then(() => {
+      connection.query(
+        `
+  SELECT * FROM users WHERE userid = ?
+  `,
+        [ctx.from.id],
+        (error, results) => {
+          if (error) throw error;
+          if (results.length === 0) {
+            connection.query(
+              `
+      INSERT INTO users (userid, username, firstName, lastName, firstSeen)
+      VALUES (?, ?, ?, ?, NOW())
+    `,
+              [
+                ctx.from.id,
+                ctx.from.username,
+                ctx.from.first_name,
+                ctx.from.last_name,
+              ],
+              (error, results) => {
+                if (error) throw error;
+                console.log("New user added:", ctx.from);
+              }
+            );
+          } else {
+            console.log("User exists in database.", ctx.from);
+          }
+        }
+      );
+    })
+    .catch((error) => console.error(error));
 });
 
 bot.command("help", async (ctx) => {
@@ -40,16 +75,83 @@ bot.command("help", async (ctx) => {
     .catch((e) => console.error(e));
 });
 
+bot.command("cmd", async (ctx) => {
+  if (!ctx.config.isDeveloper) {
+    await ctx
+      .reply("*You are not authorized to use this command.*", {
+        parse_mode: "Markdown",
+      })
+      .then(console.log("Unauthorized use by", ctx.from.id))
+      .catch((e) => console.error(e));
+    return;
+  } else {
+    await ctx
+      .reply("*Commands*\n\n_1. /list List users\n2. /last Last 3 joins_", {
+        parse_mode: "Markdown",
+      })
+      .then(console.log("Commands list sent to", ctx.from.id))
+      .catch((e) => console.error(e));
+    return;
+  }
+});
+
+bot.command("list", async (ctx) => {
+  if (!ctx.config.isDeveloper) {
+    await ctx
+      .reply("*You are not authorized to use this command.*", {
+        parse_mode: "Markdown",
+      })
+      .then(console.log("Unauthorized use by", ctx.from.id))
+      .catch((e) => console.error(e));
+    return;
+  } else {
+    await ctx
+      .reply("*List Users*", {
+        parse_mode: "Markdown",
+      })
+      .then(console.log("List command sent to", ctx.from.id))
+      .catch((e) => console.error(e));
+    return;
+  }
+});
+
+bot.command("last", async (ctx) => {
+  if (!ctx.config.isDeveloper) {
+    await ctx
+      .reply("*You are not authorized to use this command.*", {
+        parse_mode: "Markdown",
+      })
+      .then(console.log("Unauthorized use by", ctx.from.id))
+      .catch((e) => console.error(e));
+    return;
+  } else {
+    await ctx
+      .reply("*Last 3 Joins*", {
+        parse_mode: "Markdown",
+      })
+      .then(console.log("Last command sent to", ctx.from.id))
+      .catch((e) => console.error(e));
+    return;
+  }
+});
+
 // Messages
 
 bot.on("msg", async (ctx) => {
   if (!ctx.config.isDeveloper) {
     await ctx.reply(
-      "_This is a private utility bot for @anzubo. Unauthorized use is not allowed._",
+      "_This is a private utility bot for @anzubo.\nUnauthorized use is not allowed._",
       { parse_mode: "Markdown" }
     );
+    return;
   } else {
-    await ctx.reply("*Welcome admin ✨*", { parse_mode: "Markdown" });
+    await ctx.reply(
+      "*Welcome admin ✨*\n_Commands available:\n\n1. /list List users\n2. /last Last 3 joins_",
+      {
+        parse_mode: "Markdown",
+      }
+    );
+    return;
   }
 });
 
