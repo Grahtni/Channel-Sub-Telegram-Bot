@@ -54,10 +54,12 @@ bot.command("start", async (ctx) => {
               (error, results) => {
                 if (error) throw error;
                 console.log("New user added:", ctx.from);
+                return;
               }
             );
           } else {
             console.log("User exists in database.", ctx.from);
+            return;
           }
         }
       );
